@@ -26,6 +26,18 @@ services:
     environment:
       - NODE_ENV=production
 
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres  # TODO clean these up to by env variables
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # dev only, remove for prod
+
   prometheus:
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -44,3 +56,4 @@ services:
 
 volumes:
   grafana-storage:
+  pgdata:
