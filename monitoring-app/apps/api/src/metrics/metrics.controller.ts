@@ -9,6 +9,11 @@ export class MetricsController {
         private readonly metricsService: MetricsService,
     ) {}
 
+    @Get('test')
+    async getTest() {
+        return 'test';
+    }
+
     @Get()
     async getMetrics(@Res() res: Response) {
         res.set('Content-Type', 'text/plain');

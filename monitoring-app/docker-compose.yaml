@@ -27,6 +27,8 @@ services:
       - NODE_ENV=production
 
   prometheus:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     image: prom/prometheus
     ports:
       - "9090:9090"
