@@ -5,10 +5,12 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 COPY . .
+
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter web build
 
-# ---
+# --- Runtime stage ---
 FROM nginx:alpine
+
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
