@@ -26,13 +26,12 @@ services:
     environment:
       - NODE_ENV=production
 
-  # Uncomment the following lines to enable Prometheus monitoring when Monitoring configuration is ready
-  # prometheus:
-  #   image: prom/prometheus
-  #   ports:
-  #     - "9090:9090"
-  #   volumes:
-  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
 
   # grafana:
   #   image: grafana/grafana
