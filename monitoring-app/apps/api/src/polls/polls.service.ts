@@ -33,6 +33,8 @@ export class PollsService {
             relations: ['poll'],
         });
 
+        console.log('test', typeof(pollId), typeof(option?.poll.id))
+
         if (!option || option.poll.id !== pollId) {
             throw new BadRequestException('Option does not belong to this poll');
         }

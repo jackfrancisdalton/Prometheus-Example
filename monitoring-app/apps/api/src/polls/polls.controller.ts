@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { PollsService } from './polls.service';
 import { CreatePollDto } from 'src/dtos/create-poll.dto';
 import { Poll } from 'src/entities/poll.entity';
@@ -23,7 +23,7 @@ export class PollsController {
     }
 
     @Post(':pollId/vote')
-    async vote(@Param('pollID') pollId: number, @Body() dto: VoteDto): Promise<Vote> {
+    async vote(@Param('pollId', ParseIntPipe) pollId: number, @Body() dto: VoteDto): Promise<Vote> {
         return this.pollsService.vote(pollId, dto);
     }
 

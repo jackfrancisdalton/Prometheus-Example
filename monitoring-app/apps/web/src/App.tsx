@@ -1,12 +1,11 @@
 import './App.css'
+import PollsPage from './components/PollsPage'
 
 function App() {
 
   return (
     <>
-      <div>
-        BOB
-      </div>
+      <PollsPage></PollsPage>
     </>
   )
 }
