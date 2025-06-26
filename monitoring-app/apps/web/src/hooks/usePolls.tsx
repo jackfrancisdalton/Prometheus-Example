@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import type { Poll } from '../types/Poll';
 
 const API_URL = 'http://localhost:3000';
-// const socket = io(API_URL);
+const socket = io(API_URL);
 
 const getVoterId = () => {
   let storedId = localStorage.getItem('voterId');
@@ -68,6 +68,20 @@ export const usePolls = () => {
       alert(err.message);
     },
   });
+
+  useEffect(() => {
+    console.log('Connecting to socket.io server at', API_URL);
+    // TODO: move pollUpdate and socket keys to a turborepo package
+    socket.on('pollUpdate', (updatedPoll: Poll) => {
+      setPolls((prev) =>
+        prev.map((poll) => (poll.id === updatedPoll.id ? updatedPoll : poll))
+      );
+    });
+
+    return () => {
+      socket.off('pollUpdate');
+    };
+  }, []);
 
   return { polls, isLoading, voteMutation, createMutation };
 };
