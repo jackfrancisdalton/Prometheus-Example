@@ -6,6 +6,7 @@ import { PollsModule } from './polls/polls.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Poll } from './entities/poll.entity';
 import { PollOption } from './entities/poll-option.entity';
+import { Vote } from './entities/vote.entity';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { PollOption } from './entities/poll-option.entity';
       username: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASS || 'postgres',
       database: process.env.DB_NAME || 'appdb',
-      entities: [Poll, PollOption],
+      entities: [Poll, PollOption, Vote],
       synchronize: true,
     }),
     TypeOrmModule.forFeature([Poll, PollOption]),

@@ -24,7 +24,7 @@ export class PollsService {
     }
 
     async getAllPolls(): Promise<Poll[]> {
-        return this.pollRepo.find({ relations: ['options'] });
+        return this.pollRepo.find({ relations: ['options', 'votes'] });
     }
 
     async vote(pollId: number, dto: VoteDto): Promise<Vote> {

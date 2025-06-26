@@ -13,8 +13,8 @@ export class PollsController {
     ) {}
 
     @Post()
-    async createPoll(@Body() body: CreatePollDto): Promise<Poll> {
-        return this.pollsService.createPoll(body);
+    async createPoll(@Body() dto: CreatePollDto): Promise<Poll> {
+        return this.pollsService.createPoll(dto);
     }
 
     @Get()
@@ -23,8 +23,8 @@ export class PollsController {
     }
 
     @Post(':pollId/vote')
-    async vote(@Param('pollID') pollId: number, @Body() body: VoteDto): Promise<Vote> {
-        return this.pollsService.vote(pollId, body);
+    async vote(@Param('pollID') pollId: number, @Body() dto: VoteDto): Promise<Vote> {
+        return this.pollsService.vote(pollId, dto);
     }
 
     @Get(':pollId/results')
