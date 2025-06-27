@@ -1,12 +1,12 @@
-export interface PollOption {
+export class PollOptionResponse {
     id: number;
     text: string;
     percentage: number;
-}
+  }
   
-export interface Poll {
+  export class PollResponse {
     id: number;
     title: string;
-    options: PollOption[];
+    options: PollOptionResponse[];
     currentUserVoteOptionId?: number;
-}
+  }

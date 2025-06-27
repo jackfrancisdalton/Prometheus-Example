@@ -7,6 +7,7 @@ import { Poll } from 'src/entities/poll.entity';
 import { Vote } from 'src/entities/vote.entity';
 import { Repository } from 'typeorm';
 import { PollsGateway } from './polls.gateway';
+import { PollResponse } from 'src/dtos/poll-response.dto';
 
 @Injectable()
 export class PollsService {
@@ -22,11 +23,43 @@ export class PollsService {
             title: dto.title,
             options: dto.options.map(text => ({ text })),
         });
-        return this.pollRepo.save(poll);
-    }
+        const savedPoll = await this.pollRepo.save(poll);
 
-    async getAllPolls(): Promise<Poll[]> {
-        return this.pollRepo.find({ relations: ['options', 'votes'] });
+        if(savedPoll) {
+          this.gateway.broadcastPollCreate(savedPoll);
+        }
+
+        return savedPoll;
+    }
+    
+
+    async getAllPolls(voterId: string): Promise<PollResponse[]> {
+      const polls = await this.pollRepo.find({
+        relations: ['options', 'votes', 'votes.option'],
+      });
+    
+      return polls.map((poll) => {
+        const totalVotes = poll.votes.length;
+    
+        const optionVotes = poll.options.map((option) => {
+          const count = poll.votes.filter((v) => v.option.id === option.id).length;
+          const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+          return {
+            id: option.id,
+            text: option.text,
+            percentage,
+          };
+        });
+    
+        const userVote = poll.votes.find((v) => v.voterId === voterId);
+    
+        return {
+          id: poll.id,
+          title: poll.title,
+          options: optionVotes,
+          currentUserVoteOptionId: userVote?.option.id,
+        };
+      });
     }
 
     async vote(pollId: number, dto: VoteDto): Promise<Vote> {

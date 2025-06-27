@@ -20,4 +20,8 @@ import {
     broadcastPollUpdate(updatedPoll: Poll) {
       this.server.emit('pollUpdate', updatedPoll);
     }
+
+    broadcastPollCreate(createdPoll: Poll) {
+        this.server.emit('pollCreate', createdPoll);
+    }
   }
