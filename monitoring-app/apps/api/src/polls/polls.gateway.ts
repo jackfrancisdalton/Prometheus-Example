@@ -5,6 +5,7 @@ import {
   import { Server } from 'socket.io';
   import { Injectable } from '@nestjs/common';
   import { Poll } from '../entities/poll.entity';
+import { PollResponse } from 'src/dtos/poll-response.dto';
   
   @WebSocketGateway({
     cors: {
@@ -17,11 +18,11 @@ import {
     @WebSocketServer()
     server: Server;
   
-    broadcastPollUpdate(updatedPoll: Poll) {
+    broadcastPollUpdate(updatedPoll: PollResponse) {
       this.server.emit('pollUpdate', updatedPoll);
     }
 
-    broadcastPollCreate(createdPoll: Poll) {
+    broadcastPollCreate(createdPoll: PollResponse) {
         this.server.emit('pollCreate', createdPoll);
     }
   }

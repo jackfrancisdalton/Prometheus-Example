@@ -26,7 +26,16 @@ export class PollsService {
         const savedPoll = await this.pollRepo.save(poll);
 
         if(savedPoll) {
-          this.gateway.broadcastPollCreate(savedPoll);
+          const pollResponse: PollResponse = {
+              id: savedPoll.id,
+              title: savedPoll.title,
+              options: savedPoll.options.map(option => ({
+                  id: option.id,
+                  text: option.text,
+                  percentage: 0, // Default percentage as 0 for a new poll
+              })),
+          };
+          this.gateway.broadcastPollCreate(pollResponse);
         }
 
         return savedPoll;
@@ -108,7 +117,24 @@ export class PollsService {
         });
       
         if (updatedPoll) {
-            this.gateway.broadcastPollUpdate(updatedPoll);
+            const totalVotes = updatedPoll.votes.length;
+
+            const pollResponse: PollResponse = {
+                id: updatedPoll.id,
+                title: updatedPoll.title,
+                options: updatedPoll.options.map(option => {
+                    const count = updatedPoll.votes.filter(vote => vote.option.id === option.id).length;
+                    const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                    return {
+                        id: option.id,
+                        text: option.text,
+                        percentage,
+                    };
+                }),
+                currentUserVoteOptionId: +dto.voterId,
+            };
+
+            this.gateway.broadcastPollUpdate(pollResponse);
         }
       
         return savedVote;
