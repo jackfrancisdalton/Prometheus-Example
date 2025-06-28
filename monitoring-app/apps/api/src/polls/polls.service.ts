@@ -1,153 +1,101 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Poll } from 'src/entities/poll.entity';
+import { PollOption } from 'src/entities/poll-option.entity';
+import { Vote } from 'src/entities/vote.entity';
 import { CreatePollDto } from 'src/dtos/create-poll.dto';
 import { VoteDto } from 'src/dtos/vote.dto';
-import { PollOption } from 'src/entities/poll-option.entity';
-import { Poll } from 'src/entities/poll.entity';
-import { Vote } from 'src/entities/vote.entity';
-import { Repository } from 'typeorm';
-import { PollsGateway } from './polls.gateway';
-import { PollResponse } from 'src/dtos/poll-response.dto';
 
 @Injectable()
 export class PollsService {
-    constructor(
-        @InjectRepository(Poll) private readonly pollRepo: Repository<Poll>,
-        @InjectRepository(PollOption) private readonly optionRepo: Repository<PollOption>,
-        @InjectRepository(Vote) private readonly voteRepo: Repository<Vote>,
-        private readonly gateway: PollsGateway,
-    ) {}
+  private readonly logger = new Logger(PollsService.name);
 
-    async createPoll(dto: CreatePollDto): Promise<Poll> {
-        const poll = this.pollRepo.create({
-            title: dto.title,
-            options: dto.options.map(text => ({ text })),
-        });
-        const savedPoll = await this.pollRepo.save(poll);
+  constructor(
+    @InjectRepository(Poll) private readonly pollRepo: Repository<Poll>,
+    @InjectRepository(PollOption) private readonly optionRepo: Repository<PollOption>,
+    @InjectRepository(Vote) private readonly voteRepo: Repository<Vote>,
+  ) {}
 
-        if(savedPoll) {
-          const pollResponse: PollResponse = {
-              id: savedPoll.id,
-              title: savedPoll.title,
-              options: savedPoll.options.map(option => ({
-                  id: option.id,
-                  text: option.text,
-                  percentage: 0, // Default percentage as 0 for a new poll
-              })),
-          };
-          this.gateway.broadcastPollCreate(pollResponse);
-        }
+  async createPoll(dto: CreatePollDto): Promise<Poll> {
+    const poll = this.pollRepo.create({
+      title: dto.title,
+      options: dto.options.map(text => this.optionRepo.create({ text })),
+    });
+    return this.pollRepo.save(poll);
+  }
 
-        return savedPoll;
-    }
-    
+  async getAllPolls(): Promise<Poll[]> {
+    return this.pollRepo.find({
+      relations: ['options', 'votes', 'votes.option'],
+    });
+  }
 
-    async getAllPolls(voterId: string): Promise<PollResponse[]> {
-      const polls = await this.pollRepo.find({
-        relations: ['options', 'votes', 'votes.option'],
-      });
-    
-      return polls.map((poll) => {
-        const totalVotes = poll.votes.length;
-    
-        const optionVotes = poll.options.map((option) => {
-          const count = poll.votes.filter((v) => v.option.id === option.id).length;
-          const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-          return {
-            id: option.id,
-            text: option.text,
-            percentage,
-          };
-        });
-    
-        const userVote = poll.votes.find((v) => v.voterId === voterId);
-    
-        return {
-          id: poll.id,
-          title: poll.title,
-          options: optionVotes,
-          currentUserVoteOptionId: userVote?.option.id,
-        };
-      });
+  async vote(pollId: number, dto: VoteDto): Promise<Poll> {
+    const option = await this.optionRepo.findOne({
+      where: { id: dto.optionId },
+      relations: ['poll'],
+    });
+
+    if (!option || option.poll.id !== pollId) {
+      throw new BadRequestException('Option does not belong to this poll');
     }
 
-    async vote(pollId: number, dto: VoteDto): Promise<Vote> {
-        // 1. Validate poll exists
-        const poll = await this.pollRepo.findOne({
-          where: { id: pollId },
-          relations: ['options'],
-        });
-        if (!poll) {
-          throw new NotFoundException('Poll not found');
-        }
-      
-        // 2. Validate option exists and belongs to the poll
-        const option = await this.optionRepo.findOne({
-          where: { id: dto.optionId },
-          relations: ['poll'],
-        });
-        if (!option || option.poll.id !== pollId) {
-          throw new BadRequestException('Option does not belong to this poll');
-        }
-      
-        // 3. Check if voter has already voted in this poll
-        const existingVote = await this.voteRepo.findOne({
-          where: {
-            poll: { id: pollId },
-            voterId: dto.voterId,
-          },
-          relations: ['poll'],
-        });
-        if (existingVote) {
-          throw new BadRequestException('You have already voted in this poll');
-        }
-      
-        // 4. Create and save vote
-        const vote = this.voteRepo.create({
-          poll,
-          option,
-          voterId: dto.voterId,
-        });
-        const savedVote = await this.voteRepo.save(vote);
-      
-        // 5. Fetch updated poll with options + vote count (if needed)
-        const updatedPoll = await this.pollRepo.findOne({
-          where: { id: pollId },
-          relations: ['options', 'votes'],
-        });
-      
-        if (updatedPoll) {
-            const totalVotes = updatedPoll.votes.length;
+    const existingVote = await this.voteRepo.findOne({
+      where: { poll: { id: pollId }, voterId: dto.voterId },
+    });
 
-            const pollResponse: PollResponse = {
-                id: updatedPoll.id,
-                title: updatedPoll.title,
-                options: updatedPoll.options.map(option => {
-                    const count = updatedPoll.votes.filter(vote => vote.option.id === option.id).length;
-                    const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-                    return {
-                        id: option.id,
-                        text: option.text,
-                        percentage,
-                    };
-                }),
-                currentUserVoteOptionId: +dto.voterId,
-            };
-
-            this.gateway.broadcastPollUpdate(pollResponse);
-        }
-      
-        return savedVote;
-      }
-      
-
-    async getVotesForPoll(pollId: number): Promise<Vote[]> {
-        const poll = await this.pollRepo.findOne({
-            where: { id: pollId },
-            relations: ['votes', 'votes.option'],
-        });
-
-        if (!poll) throw new NotFoundException('Poll not found');
-        return poll.votes;
+    if (existingVote) {
+      throw new BadRequestException('You have already voted in this poll');
     }
+
+    const vote = this.voteRepo.create({
+      poll: option.poll,
+      option,
+      voterId: dto.voterId,
+    });
+
+    await this.voteRepo.save(vote);
+
+    const poll = await this.pollRepo.findOne({
+      where: { id: pollId },
+      relations: ['options', 'votes', 'votes.option'],
+    });
+
+    if(!poll) {
+      throw new BadRequestException('TODO')
+    }
+
+    return poll;
+  }
+
+  async getVotesForPoll(pollId: number): Promise<Vote[]> {
+    const poll = await this.pollRepo.findOne({
+      where: { id: pollId },
+      relations: ['votes', 'votes.option'],
+    });
+
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+
+    return poll.votes;
+  }
+
+  async deletePoll(pollId: number): Promise<void> {
+    await this.pollRepo.delete(pollId);
+  }
+
+  async getPollWithVotes(pollId: number): Promise<Poll> {
+    const poll = await this.pollRepo.findOne({
+      where: { id: pollId },
+      relations: ['options', 'votes', 'votes.option'],
+    });
+
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+
+    return poll;
+  }
 }

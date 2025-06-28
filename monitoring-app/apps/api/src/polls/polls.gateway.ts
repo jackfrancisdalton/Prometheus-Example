@@ -1,10 +1,9 @@
 import {
-    WebSocketGateway,
-    WebSocketServer,
-  } from '@nestjs/websockets';
-  import { Server } from 'socket.io';
-  import { Injectable } from '@nestjs/common';
-  import { Poll } from '../entities/poll.entity';
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { Server } from 'socket.io';
+import { Injectable } from '@nestjs/common';
 import { PollResponse } from 'src/dtos/poll-response.dto';
   
   @WebSocketGateway({
@@ -24,5 +23,9 @@ import { PollResponse } from 'src/dtos/poll-response.dto';
 
     broadcastPollCreate(createdPoll: PollResponse) {
         this.server.emit('pollCreate', createdPoll);
+    }
+
+    broadcastPollDelete(pollId: number) {
+        this.server.emit('pollDelete', pollId)
     }
   }

@@ -4,7 +4,7 @@ import { PollCard } from '../components/PollCard';
 import { PollCreate } from './CreatePoll';
 
 export const PollsPage: React.FC = () => {
-  const { polls, isLoading, voteMutation, createMutation } = usePolls();
+  const { polls, isLoading, voteMutation, createMutation, deleteMoutation } = usePolls();
 
   return (
     <div className="p-6 space-y-8">
@@ -14,7 +14,12 @@ export const PollsPage: React.FC = () => {
           <p>Loading polls...</p>
         ) : (
           polls.map((poll) => (
-            <PollCard key={poll.id} poll={poll} onVote={voteMutation.mutate} />
+            <PollCard 
+                key={poll.id} 
+                poll={poll} 
+                onVote={voteMutation.mutate} 
+                onDelete={deleteMoutation.mutate}
+            />
           ))
         )}
       </div>

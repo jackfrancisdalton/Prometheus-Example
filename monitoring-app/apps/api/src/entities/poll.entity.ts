@@ -16,6 +16,6 @@ export class Poll {
   @OneToMany(() => PollOption, (option) => option.poll, { cascade: true })
   options: PollOption[];
 
-  @OneToMany(() => Vote, (vote) => vote.poll)
+  @OneToMany(() => Vote, (vote) => vote.poll, { cascade: true })
   votes: Vote[];
 }

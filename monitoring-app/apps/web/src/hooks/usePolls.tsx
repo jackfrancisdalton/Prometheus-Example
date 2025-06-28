@@ -51,6 +51,18 @@ export const usePolls = () => {
         },
     });
 
+    const deleteMoutation = useMutation({
+        mutationFn: async (pollId: number) => {
+            console.log('TEST')
+            await fetch(`${API_URL}/polls/${pollId}`, {
+                method: 'DELETE',
+            })
+        },
+        onError: (err: any) => {
+            alert(err.message);
+        }
+    })
+
     const voteMutation = useMutation({
         mutationFn: async ({ pollId, optionId }: { pollId: number; optionId: number }) => {
             const res = await fetch(`${API_URL}/polls/${pollId}/vote`, {
@@ -68,9 +80,9 @@ export const usePolls = () => {
         },
     });
 
+    // TODO: move socket keys to a turborepo package
     useEffect(() => {
         const socket = io(API_URL);
-        // TODO: move pollUpdate and socket keys to a turborepo package
         socket.on('pollUpdate', (updatedPoll: Poll) => {
             setPolls((prev) =>
                 prev.map((poll) => (poll.id === updatedPoll.id ? updatedPoll : poll))
@@ -84,10 +96,16 @@ export const usePolls = () => {
             });
         });
 
+        socket.on('pollDelete', (pollId: number) => {
+            setPolls((prev) => {
+                return prev.filter((poll) => poll.id !== pollId)
+            })
+        })
+
         return () => {
             socket.disconnect();
         };
     }, []);
 
-    return { polls, isLoading, voteMutation, createMutation };
+    return { polls, isLoading, voteMutation, createMutation, deleteMoutation };
 };

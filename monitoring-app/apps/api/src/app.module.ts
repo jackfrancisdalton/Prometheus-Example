@@ -18,6 +18,7 @@ import { Vote } from './entities/vote.entity';
       password: process.env.DB_PASS || 'postgres',
       database: process.env.DB_NAME || 'appdb',
       entities: [Poll, PollOption, Vote],
+      dropSchema: true, // NOTE: instead of dealing with migrations we drop and sync the entiies each time
       synchronize: true,
     }),
     TypeOrmModule.forFeature([Poll, PollOption]),

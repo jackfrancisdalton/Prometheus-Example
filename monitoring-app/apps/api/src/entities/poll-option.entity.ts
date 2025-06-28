@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Poll } from './poll.entity';
 import { Vote } from './vote.entity';
 
@@ -11,6 +11,7 @@ export class PollOption {
   text: string;
 
   @ManyToOne(() => Poll, (poll) => poll.options, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'pollId' })
   poll: Poll;
 
   @OneToMany(() => Vote, (vote) => vote.option)

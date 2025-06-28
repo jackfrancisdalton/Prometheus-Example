@@ -4,13 +4,15 @@ import type { Poll } from '../types/Poll';
 type Props = {
   poll: Poll;
   onVote: (input: { pollId: number; optionId: number }) => void;
+  onDelete: (polldId: number) => void;
 };
 
 
-export const PollCard: React.FC<Props> = ({ poll, onVote }) => {
+export const PollCard: React.FC<Props> = ({ poll, onVote, onDelete }) => {
   return (
     <div className="bg-white shadow-md rounded-xl p-4">
       <h2 className="text-lg font-semibold mb-2">{poll.title}</h2>
+      <button onClick={() => onDelete(poll.id) }>DELETE</button>
       <div className="space-y-2">
         {poll.options.map((opt) => {
           const isUserVote = poll.currentUserVoteOptionId === opt.id;
