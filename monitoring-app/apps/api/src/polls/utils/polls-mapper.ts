@@ -1,5 +1,5 @@
-import { PollResponse } from "src/dtos/poll-response.dto";
-import { Poll } from "src/entities/poll.entity";
+import { PollResponse } from "src/polls/dtos/poll-response.dto";
+import { Poll } from "src/polls/entities/poll.entity";
 
 export class PollsMapper {
     static toPollResponse(poll: Poll, voterId?: string): PollResponse {

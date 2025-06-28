@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common';
 import { PollsService } from './polls.service';
 import { PollsController } from './polls.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Poll } from 'src/entities/poll.entity';
-import { PollOption } from 'src/entities/poll-option.entity';
-import { Vote } from 'src/entities/vote.entity';
+import { Poll } from 'src/polls/entities/poll.entity';
+import { PollOption } from 'src/polls/entities/poll-option.entity';
+import { Vote } from 'src/polls/entities/vote.entity';
 import { PollsGateway } from './polls.gateway';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [

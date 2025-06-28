@@ -4,9 +4,10 @@ import { AppService } from './app.service';
 import { MetricsModule } from './metrics/metrics.module';
 import { PollsModule } from './polls/polls.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Poll } from './entities/poll.entity';
-import { PollOption } from './entities/poll-option.entity';
-import { Vote } from './entities/vote.entity';
+import { Poll } from './polls/entities/poll.entity';
+import { PollOption } from './polls/entities/poll-option.entity';
+import { Vote } from './polls/entities/vote.entity';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { Vote } from './entities/vote.entity';
       dropSchema: true, // NOTE: instead of dealing with migrations we drop and sync the entiies each time
       synchronize: true,
     }),
-    TypeOrmModule.forFeature([Poll, PollOption]),
+    EventEmitterModule.forRoot(),
     MetricsModule, 
     PollsModule
   ],

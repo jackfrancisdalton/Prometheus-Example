@@ -1,31 +1,39 @@
-import {
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
+// polls.gateway.ts
+import { WebSocketGateway, WebSocketServer, OnGatewayInit } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { Injectable } from '@nestjs/common';
-import { PollResponse } from 'src/dtos/poll-response.dto';
-  
-  @WebSocketGateway({
-    cors: {
-      origin: 'http://localhost:5173',
-      credentials: true,
-    },
-  })
-  @Injectable()
-  export class PollsGateway {
-    @WebSocketServer()
-    server: Server;
-  
-    broadcastPollUpdate(updatedPoll: PollResponse) {
-      this.server.emit('pollUpdate', updatedPoll);
-    }
+import { OnEvent } from '@nestjs/event-emitter';
+import { PollsMapper } from 'src/polls/utils/polls-mapper';
 
-    broadcastPollCreate(createdPoll: PollResponse) {
-        this.server.emit('pollCreate', createdPoll);
-    }
+@WebSocketGateway({
+  cors: {
+    origin: 'http://localhost:5173',
+    credentials: true,
+  },
+})
+@Injectable()
+export class PollsGateway implements OnGatewayInit {
+  @WebSocketServer()
+  server: Server;
 
-    broadcastPollDelete(pollId: number) {
-        this.server.emit('pollDelete', pollId)
-    }
+  afterInit(server: Server) {
+    console.log('WebSocket gateway initialized');
   }
+
+  @OnEvent('poll.created')
+  handlePollCreated(poll: any) {
+    const response = PollsMapper.toPollResponse(poll);
+    this.server.emit('pollCreate', response);
+  }
+
+  @OnEvent('poll.voted')
+  handlePollVoted(poll: any) {
+    const response = PollsMapper.toPollResponse(poll);
+    this.server.emit('pollUpdate', response);
+  }
+
+  @OnEvent('poll.deleted')
+  handlePollDeleted(payload: { pollId: number }) {
+    this.server.emit('pollDelete', payload.pollId);
+  }
+}
