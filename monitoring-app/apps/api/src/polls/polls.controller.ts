@@ -16,6 +16,7 @@ import {
   import { PollResponse } from 'src/dtos/poll-response.dto';
   import { PollsGateway } from './polls.gateway';
   import { Poll } from 'src/entities/poll.entity';
+import { PollsMapper } from 'src/utils/polls-mapper';
   
   @Controller('polls')
   export class PollsController {
@@ -27,9 +28,8 @@ import {
     @Post()
     async createPoll(@Body() dto: CreatePollDto): Promise<PollResponse> {
       const poll = await this.pollsService.createPoll(dto);
-  
-      const response: PollResponse = this.toPollResponse(poll);
-  
+
+      const response: PollResponse = PollsMapper.toPollResponse(poll);  
       this.gateway.broadcastPollCreate(response);
       return response;
     }
@@ -41,8 +41,7 @@ import {
       }
   
       const polls = await this.pollsService.getAllPolls();
-  
-      return polls.map(poll => this.toPollResponse(poll, voterId));
+      return polls.map(poll => PollsMapper.toPollResponse(poll, voterId));
     }
   
     @Post(':pollId/vote')
@@ -52,17 +51,9 @@ import {
     ): Promise<PollResponse> {
       const updatedPoll = await this.pollsService.vote(pollId, dto);
   
-      const response = this.toPollResponse(updatedPoll, dto.voterId);
-  
+      const response = PollsMapper.toPollResponse(updatedPoll, dto.voterId);  
       this.gateway.broadcastPollUpdate(response);
       return response;
-    }
-  
-    @Get(':pollId/results')
-    async getResults(
-      @Param('pollId', ParseIntPipe) pollId: number,
-    ): Promise<Vote[]> {
-      return this.pollsService.getVotesForPoll(pollId);
     }
   
     @Delete(':pollId')
@@ -71,31 +62,6 @@ import {
     ): Promise<void> {
       await this.pollsService.deletePoll(pollId);
       this.gateway.broadcastPollDelete(pollId);
-    }
-  
-    private toPollResponse(poll: Poll, voterId?: string): PollResponse {
-      const totalVotes = poll.votes?.length || 0;
-  
-      const optionVotes = poll.options.map(option => {
-        const count = poll.votes?.filter(v => v.option.id === option.id).length || 0;
-        const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-        return {
-          id: option.id,
-          text: option.text,
-          percentage,
-        };
-      });
-  
-      const userVote = voterId
-        ? poll.votes?.find(v => v.voterId === voterId)
-        : undefined;
-  
-      return {
-        id: poll.id,
-        title: poll.title,
-        options: optionVotes,
-        currentUserVoteOptionId: userVote?.option.id,
-      };
     }
   }
   

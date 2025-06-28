@@ -69,19 +69,6 @@ export class PollsService {
     return poll;
   }
 
-  async getVotesForPoll(pollId: number): Promise<Vote[]> {
-    const poll = await this.pollRepo.findOne({
-      where: { id: pollId },
-      relations: ['votes', 'votes.option'],
-    });
-
-    if (!poll) {
-      throw new NotFoundException('Poll not found');
-    }
-
-    return poll.votes;
-  }
-
   async deletePoll(pollId: number): Promise<void> {
     await this.pollRepo.delete(pollId);
   }

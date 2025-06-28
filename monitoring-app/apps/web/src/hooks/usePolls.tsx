@@ -22,7 +22,7 @@ export const usePolls = () => {
     const voterId = getVoterId();
 
     const { isLoading } = useQuery({
-        queryKey: ['polls', voterId],
+        queryKey: ['polls'],
         queryFn: async () => {
             const res = await fetch(`${API_URL}/polls?voterId=${voterId}`);
             const data = await res.json();
@@ -53,7 +53,6 @@ export const usePolls = () => {
 
     const deleteMoutation = useMutation({
         mutationFn: async (pollId: number) => {
-            console.log('TEST')
             await fetch(`${API_URL}/polls/${pollId}`, {
                 method: 'DELETE',
             })

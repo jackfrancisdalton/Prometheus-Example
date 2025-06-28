@@ -17,6 +17,7 @@ export const PollCard: React.FC<Props> = ({ poll, onVote, onDelete }) => {
         {poll.options.map((opt) => {
           const isUserVote = poll.currentUserVoteOptionId === opt.id;
 
+          console.log(poll.currentUserVoteOptionId, opt.id)
           return (
             <button
               key={opt.id}
