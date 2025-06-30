@@ -46,13 +46,24 @@ services:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - dashboard
 
-  # grafana:
-  #   image: grafana/grafana
-  #   ports:
-  #     - "3002:3000"
-  #   volumes:
-  #     - grafana-storage:/var/lib/grafana
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - dashboard
+
+networks:
+  dashboard:
+    driver: bridge
 
 volumes:
   grafana-storage:
