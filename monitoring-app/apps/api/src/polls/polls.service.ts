@@ -13,6 +13,7 @@ import { Vote } from 'src/polls/entities/vote.entity';
 import { CreatePollDto } from 'src/polls/dtos/create-poll.dto';
 import { VoteDto } from 'src/polls/dtos/vote.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { MetricsService } from 'src/metrics/metrics.service';
 
 @Injectable()
 export class PollsService {
@@ -22,6 +23,7 @@ export class PollsService {
     @InjectRepository(Vote) private readonly voteRepo: Repository<Vote>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
+    private readonly metricsService: MetricsService
   ) {}
 
   async createPoll(dto: CreatePollDto): Promise<Poll> {
@@ -30,6 +32,11 @@ export class PollsService {
       options: dto.options.map(text => this.optionRepo.create({ text })),
     });
     const savedPoll = await this.pollRepo.save(poll);
+
+    // Track a poll was created
+    this.metricsService.pollsCreatedCounter.inc();
+
+    // update websocket
     this.eventEmitter.emit('poll.created', savedPoll);
     return savedPoll;
   }
@@ -71,6 +78,9 @@ export class PollsService {
         }),
       );
 
+      // update vote count
+      this.metricsService.pollVotesCounter.inc();
+
       const poll = await pollRepo.findOne({
         where: { id: pollId },
         relations: ['options', 'votes', 'votes.option'],
@@ -88,6 +98,10 @@ export class PollsService {
 
   async deletePoll(pollId: number): Promise<void> {
     await this.pollRepo.delete(pollId);
+
+    // update delete count
+    this.metricsService.pollsDeletedCounter.inc();
+
     this.eventEmitter.emit('poll.deleted', { pollId });
   }
 }

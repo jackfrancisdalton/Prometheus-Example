@@ -1,39 +1,36 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as client from 'prom-client';
+import { Injectable } from '@nestjs/common';
+import { Counter, Registry } from 'prom-client';
 
 @Injectable()
-export class MetricsService implements OnModuleInit {
-    private readonly registry = new client.Registry();
-  
-    public readonly pollCreated = new client.Counter({
+export class MetricsService {
+  private readonly registry = new Registry();
+
+  public readonly pollsCreatedCounter: Counter<string>;
+  public readonly pollVotesCounter: Counter<string>;
+  public readonly pollsDeletedCounter: Counter<string>;
+
+  constructor() {
+    this.pollsCreatedCounter = new Counter({
       name: 'polls_created_total',
       help: 'Total number of polls created',
+      registers: [this.registry],
     });
-  
-    public readonly votesCast = new client.Counter({
-      name: 'votes_cast_total',
-      help: 'Total number of votes cast',
+
+    this.pollVotesCounter = new Counter({
+      name: 'poll_votes_total',
+      help: 'Total number of votes submitted',
+      registers: [this.registry],
     });
-  
-    public readonly httpDuration = new client.Histogram({
-      name: 'http_request_duration_seconds',
-      help: 'Duration of HTTP requests',
-      labelNames: ['method', 'route', 'status_code'],
-      buckets: [0.1, 0.5, 1, 2, 5],
+
+    this.pollsDeletedCounter = new Counter({
+      name: 'poll_deleted_total',
+      help: 'Total number of polls deleted',
+      registers: [this.registry],
     });
-  
-    onModuleInit() {
-      client.collectDefaultMetrics({ register: this.registry });
-      this.registry.registerMetric(this.pollCreated);
-      this.registry.registerMetric(this.votesCast);
-      this.registry.registerMetric(this.httpDuration);
-    }
-  
-    getMetrics() {
-      return this.registry.metrics();
-    }
-  
-    getRegistry() {
-      return this.registry;
-    }
+    
   }
+
+  getMetrics(): Promise<string> {
+    return this.registry.metrics();
+  }
+}
