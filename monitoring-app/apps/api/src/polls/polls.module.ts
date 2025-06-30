@@ -6,7 +6,6 @@ import { Poll } from 'src/polls/entities/poll.entity';
 import { PollOption } from 'src/polls/entities/poll-option.entity';
 import { Vote } from 'src/polls/entities/vote.entity';
 import { PollsGateway } from './polls.gateway';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
