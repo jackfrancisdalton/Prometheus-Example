@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { RequestMetricsInterceptor } from './metrics/request-metrics.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -8,6 +9,12 @@ async function bootstrap() {
     origin: 'http://localhost:5173', // allow Vite dev server
     credentials: true,
   });
+
+  app.useGlobalInterceptors(
+    new RequestMetricsInterceptor(
+      app.get('MetricsService')
+    )
+  );
   
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
