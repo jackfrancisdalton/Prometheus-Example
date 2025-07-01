@@ -12,7 +12,11 @@ export class MetricsService {
   public readonly httpRequestsCounter: Counter<string>;
   public readonly httpRequestDurationHistogram: Histogram<string>;
 
+  public readonly webhookSendCounter: Counter<string>;
+  public readonly webhookDurationHistogram: Histogram<string>;
+
   constructor() {
+    // Poll metrics
     this.pollsCreatedCounter = new Counter({
       name: 'polls_created_total',
       help: 'Total number of polls created',
@@ -31,6 +35,7 @@ export class MetricsService {
       registers: [this.registry],
     });
     
+    // HTTP request metrics
     this.httpRequestDurationHistogram = new Histogram({
       name: 'http_request_duration_seconds',
       help: 'Duration of HTTP requests in seconds',
@@ -43,6 +48,22 @@ export class MetricsService {
       name: 'http_requests_total',
       help: 'Total HTTP requests received',
       labelNames: ['method', 'route'],
+      registers: [this.registry],
+    });
+
+    // Webhook metrics
+    this.webhookSendCounter = new Counter({
+      name: 'webhook_send_total',
+      help: 'Total number of webhooks sent',
+      labelNames: ['webhook'],
+      registers: [this.registry],
+    });
+
+    this.webhookDurationHistogram = new Histogram({
+      name: 'webhook_duration_seconds',
+      help: 'Duration of webhook processing in seconds',
+      labelNames: ['webhook'],
+      buckets: [0.1, 0.5, 1, 2.5, 5, 10],
       registers: [this.registry],
     });
   }

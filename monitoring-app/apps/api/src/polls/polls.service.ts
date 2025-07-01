@@ -20,7 +20,6 @@ export class PollsService {
   constructor(
     @InjectRepository(Poll) private readonly pollRepo: Repository<Poll>,
     @InjectRepository(PollOption) private readonly optionRepo: Repository<PollOption>,
-    @InjectRepository(Vote) private readonly voteRepo: Repository<Vote>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
     private readonly metricsService: MetricsService
