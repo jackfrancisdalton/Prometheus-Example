@@ -6,6 +6,8 @@ import { RequestMetricsInterceptor } from './request-metrics.interceptor';
 @Module({
   providers: [MetricsService],
   controllers: [MetricsController],
-  exports: [MetricsService, RequestMetricsInterceptor],
+  exports: [
+    MetricsService
+  ],
 })
 export class MetricsModule {}
